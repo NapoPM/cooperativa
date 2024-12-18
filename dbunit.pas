@@ -11,12 +11,12 @@ var
   ODBCConnection: TODBCConnection;
   SQLTransaction: TSQLTransaction;
 
-procedure InitializeDatabase(const HostName, DatabaseName, UserName, Password: String);
-procedure FinalizeDatabase;
+procedure IniciarDB(const HostName, DatabaseName, UserName, Password: String);
+procedure CerrarDB;
 
 implementation
 
-procedure InitializeDatabase(const HostName, DatabaseName, UserName, Password: String);
+procedure IniciarDB(const HostName, DatabaseName, UserName, Password: String);
 begin
   // Crear objetos de conexión y transacción
   ODBCConnection := TODBCConnection.Create(nil);
@@ -45,7 +45,7 @@ begin
   end;
 end;
 
-procedure FinalizeDatabase;
+procedure CerrarDB;
 begin
   // Desconectar y liberar recursos
   if Assigned(ODBCConnection) then

@@ -13,15 +13,15 @@ type
 
   TForm1 = class(TForm)
   private
-    lblName, lblLastName, lblDNI, lblAddress: TLabel;
-    edtName, edtLastName, edtDNI, edtAddress: TEdit;
-    btnCreate, btnEdit, btnDelete: TButton;
+    lblNombre, lblApellido, lblDNI, lblDireccion: TLabel;
+    edtNombre, edtApellido, edtDNI, edtDireccion: TEdit;
+    btnCrear, btnEditar, btnEliminar: TButton;
     StringGrid: TStringGrid;
-    procedure CreateComponents;      // Crear componentes dinámicamente
-    procedure RefreshGrid;           // Refrescar datos en el TStringGrid
-    procedure btnCreateClick(Sender: TObject);
-    procedure btnEditClick(Sender: TObject);
-    procedure btnDeleteClick(Sender: TObject);
+    procedure CrearComponentes;
+    procedure RefrescarGrid;
+    procedure btnCrearClick(Sender: TObject);
+    procedure btnEditarClick(Sender: TObject);
+    procedure btnEliminarClick(Sender: TObject);
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -41,48 +41,48 @@ begin
   inherited Create(TheOwner);
 
   // Crear componentes visuales
-  CreateComponents;
+  CrearComponentes;
 
   // Conectar a la base de datos
-  InitializeDatabase('localhost', 'SimpleCRUD', '', '');
+  IniciarDB('localhost', 'SimpleCRUD', '', '');
 
   // Cargar datos en el TStringGrid
-  RefreshGrid;
+  RefrescarGrid;
 end;
 
 destructor TForm1.Destroy;
 begin
   // Finalizar la conexión a la base de datos
-  FinalizeDatabase;
+  CerrarDB;
   inherited Destroy;
 end;
 
-procedure TForm1.CreateComponents;
+procedure TForm1.CrearComponentes;
 begin
   // Etiquetas y campos de texto
-  lblName := TLabel.Create(Self);
-  lblName.Parent := Self;
-  lblName.Caption := 'Nombre:';
-  lblName.Left := 20;
-  lblName.Top := 20;
+  lblNombre := TLabel.Create(Self);
+  lblNombre.Parent := Self;
+  lblNombre.Caption := 'Nombre:';
+  lblNombre.Left := 20;
+  lblNombre.Top := 20;
 
-  edtName := TEdit.Create(Self);
-  edtName.Parent := Self;
-  edtName.Left := 100;
-  edtName.Top := 20;
-  edtName.Width := 200;
+  edtNombre := TEdit.Create(Self);
+  edtNombre.Parent := Self;
+  edtNombre.Left := 100;
+  edtNombre.Top := 20;
+  edtNombre.Width := 200;
 
-  lblLastName := TLabel.Create(Self);
-  lblLastName.Parent := Self;
-  lblLastName.Caption := 'Apellido:';
-  lblLastName.Left := 20;
-  lblLastName.Top := 50;
+  lblApellido := TLabel.Create(Self);
+  lblApellido.Parent := Self;
+  lblApellido.Caption := 'Apellido:';
+  lblApellido.Left := 20;
+  lblApellido.Top := 50;
 
-  edtLastName := TEdit.Create(Self);
-  edtLastName.Parent := Self;
-  edtLastName.Left := 100;
-  edtLastName.Top := 50;
-  edtLastName.Width := 200;
+  edtApellido := TEdit.Create(Self);
+  edtApellido.Parent := Self;
+  edtApellido.Left := 100;
+  edtApellido.Top := 50;
+  edtApellido.Width := 200;
 
   lblDNI := TLabel.Create(Self);
   lblDNI.Parent := Self;
@@ -96,39 +96,39 @@ begin
   edtDNI.Top := 80;
   edtDNI.Width := 200;
 
-  lblAddress := TLabel.Create(Self);
-  lblAddress.Parent := Self;
-  lblAddress.Caption := 'Dirección:';
-  lblAddress.Left := 20;
-  lblAddress.Top := 110;
+  lblDireccion := TLabel.Create(Self);
+  lblDireccion.Parent := Self;
+  lblDireccion.Caption := 'Dirección:';
+  lblDireccion.Left := 20;
+  lblDireccion.Top := 110;
 
-  edtAddress := TEdit.Create(Self);
-  edtAddress.Parent := Self;
-  edtAddress.Left := 100;
-  edtAddress.Top := 110;
-  edtAddress.Width := 200;
+  edtDireccion := TEdit.Create(Self);
+  edtDireccion.Parent := Self;
+  edtDireccion.Left := 100;
+  edtDireccion.Top := 110;
+  edtDireccion.Width := 200;
 
   // Botones
-  btnCreate := TButton.Create(Self);
-  btnCreate.Parent := Self;
-  btnCreate.Caption := 'Crear';
-  btnCreate.Left := 20;
-  btnCreate.Top := 150;
-  btnCreate.OnClick := @btnCreateClick;
+  btnCrear := TButton.Create(Self);
+  btnCrear.Parent := Self;
+  btnCrear.Caption := 'Crear';
+  btnCrear.Left := 20;
+  btnCrear.Top := 150;
+  btnCrear.OnClick := @btnCrearClick;
 
-  btnEdit := TButton.Create(Self);
-  btnEdit.Parent := Self;
-  btnEdit.Caption := 'Editar';
-  btnEdit.Left := 120;
-  btnEdit.Top := 150;
-  btnEdit.OnClick := @btnEditClick;
+  btnEditar := TButton.Create(Self);
+  btnEditar.Parent := Self;
+  btnEditar.Caption := 'Editar';
+  btnEditar.Left := 120;
+  btnEditar.Top := 150;
+  btnEditar.OnClick := @btnEditarClick;
 
-  btnDelete := TButton.Create(Self);
-  btnDelete.Parent := Self;
-  btnDelete.Caption := 'Eliminar';
-  btnDelete.Left := 220;
-  btnDelete.Top := 150;
-  btnDelete.OnClick := @btnDeleteClick;
+  btnEliminar := TButton.Create(Self);
+  btnEliminar.Parent := Self;
+  btnEliminar.Caption := 'Eliminar';
+  btnEliminar.Left := 220;
+  btnEliminar.Top := 150;
+  btnEliminar.OnClick := @btnEliminarClick;
 
   // StringGrid para mostrar los datos
   StringGrid := TStringGrid.Create(Self);
@@ -150,7 +150,7 @@ begin
   StringGrid.Cells[4, 0] := 'Dirección';
 end;
 
-procedure TForm1.RefreshGrid;
+procedure TForm1.RefrescarGrid;
 var
   SQLQuery: TSQLQuery;
   RowIndex: Integer;
@@ -183,26 +183,26 @@ begin
   end;
 end;
 
-procedure TForm1.btnCreateClick(Sender: TObject);
+procedure TForm1.btnCrearClick(Sender: TObject);
 begin
-  if (edtName.Text = '') or (edtLastName.Text = '') or (edtDNI.Text = '') or (edtAddress.Text = '') then
+  if (edtNombre.Text = '') or (edtApellido.Text = '') or (edtDNI.Text = '') or (edtDireccion.Text = '') then
   begin
     ShowMessage('Por favor, completa todos los campos.');
     Exit;
   end;
 
-  InsertAffiliate(edtName.Text, edtLastName.Text, edtDNI.Text, edtAddress.Text);
-  RefreshGrid;
+  InsertAffiliate(edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
+  RefrescarGrid;
 
   // Limpiar los campos
-  edtName.Clear;
-  edtLastName.Clear;
+  edtNombre.Clear;
+  edtApellido.Clear;
   edtDNI.Clear;
-  edtAddress.Clear;
+  edtDireccion.Clear;
   ShowMessage('Afiliado creado.');
 end;
 
-procedure TForm1.btnEditClick(Sender: TObject);
+procedure TForm1.btnEditarClick(Sender: TObject);
 var
   Id: Integer;
 begin
@@ -213,12 +213,12 @@ begin
   end;
 
   Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
-  UpdateAffiliate(Id, edtName.Text, edtLastName.Text, edtDNI.Text, edtAddress.Text);
-  RefreshGrid;
+  UpdateAffiliate(Id, edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
+  RefrescarGrid;
   ShowMessage('Afiliado actualizado.');
 end;
 
-procedure TForm1.btnDeleteClick(Sender: TObject);
+procedure TForm1.btnEliminarClick(Sender: TObject);
 var
   Id: Integer;
 begin
@@ -230,7 +230,7 @@ begin
 
   Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
   DeleteAffiliate(Id);
-  RefreshGrid;
+  RefrescarGrid;
   ShowMessage('Afiliado eliminado.');
 end;
 

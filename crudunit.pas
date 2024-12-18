@@ -7,14 +7,14 @@ interface
 uses
   Classes, SysUtils, DB, SQLDB, DBUnit;
 
-procedure InsertAffiliate(const Nombre, Apellido, DNI, Direccion: String);
-procedure UpdateAffiliate(const Id: Integer; const Nombre, Apellido, DNI, Direccion: String);
-procedure DeleteAffiliate(const Id: Integer);
-procedure LoadAffiliates(List: TStrings);
+procedure InsertarAfiliado(const Nombre, Apellido, DNI, Direccion: String);
+procedure ActualizarAfiliado(const Id: Integer; const Nombre, Apellido, DNI, Direccion: String);
+procedure EliminarAfiliado(const Id: Integer);
+procedure MostrarAfiliado(List: TStrings);
 
 implementation
 
-procedure InsertAffiliate(const Nombre, Apellido, DNI, Direccion: String);
+procedure InsertarAfiliado(const Nombre, Apellido, DNI, Direccion: String);
 var
   SQLQuery: TSQLQuery;
 begin
@@ -34,7 +34,7 @@ begin
   end;
 end;
 
-procedure UpdateAffiliate(const Id: Integer; const Nombre, Apellido, DNI, Direccion: String);
+procedure ActualizarAfiliado(const Id: Integer; const Nombre, Apellido, DNI, Direccion: String);
 var
   SQLQuery: TSQLQuery;
 begin
@@ -55,7 +55,7 @@ begin
   end;
 end;
 
-procedure DeleteAffiliate(const Id: Integer);
+procedure EliminarAfiliado(const Id: Integer);
 var
   SQLQuery: TSQLQuery;
 begin
@@ -71,14 +71,14 @@ begin
   end;
 end;
 
-procedure LoadAffiliates(List: TStrings);
+procedure MostrarAfiliado(List: TStrings);
 var
   SQLQuery: TSQLQuery;
 begin
   SQLQuery := TSQLQuery.Create(nil);
   try
     SQLQuery.DataBase := ODBCConnection; // Usar conexión global de DBUnit
-    SQLQuery.SQL.Text := 'SELECT ID, Nombre, Apellido, DNI, Direccion FROM Afiliados';
+    SQLQuery.SQL.Text := 'SELECT * FROM Afiliados';
     SQLQuery.Open;
     List.Clear;
 
