@@ -5,7 +5,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Grids, CRUDUnit, DBUnit, SQLDB;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Grids, Unit3, Unit2, SQLDB;
 
 type
 
@@ -159,7 +159,7 @@ begin
 
   SQLQuery := TSQLQuery.Create(nil);
   try
-    SQLQuery.DataBase := ODBCConnection; // Usar conexión global de DBUnit
+    SQLQuery.DataBase := Conn; // Usar conexión global de DBUnit
     SQLQuery.SQL.Text := 'SELECT ID, Nombre, Apellido, DNI, Direccion FROM Afiliados';
     SQLQuery.Open;
 
@@ -191,7 +191,7 @@ begin
     Exit;
   end;
 
-  InsertAffiliate(edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
+  InsertarAfiliado(edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
   RefrescarGrid;
 
   // Limpiar los campos
@@ -213,7 +213,7 @@ begin
   end;
 
   Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
-  UpdateAffiliate(Id, edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
+  ActualizarAfiliado(Id, edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
   RefrescarGrid;
   ShowMessage('Afiliado actualizado.');
 end;
@@ -229,9 +229,9 @@ begin
   end;
 
   Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
-  DeleteAffiliate(Id);
+  EliminarAfiliado(Id);
   RefrescarGrid;
-  ShowMessage('Afiliado eliminado.');
+  ShowMessage('Afiliado' + edtNombre.Text + 'eliminado.');
 end;
 
 end.
