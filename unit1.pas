@@ -5,7 +5,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Grids, Unit3, Unit2, SQLDB;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, DBGrids, DB, SQLDB, Unit2, Unit3;
 
 type
 
@@ -15,13 +15,18 @@ type
   private
     lblNombre, lblApellido, lblDNI, lblDireccion: TLabel;
     edtNombre, edtApellido, edtDNI, edtDireccion: TEdit;
-    btnCrear, btnEditar, btnEliminar: TButton;
-    StringGrid: TStringGrid;
+    btnCrear, btnEditar, btnEliminar, btnLimpiar: TButton;
+    DBGrid: TDBGrid;
+    DataSource: TDataSource;
+    SQLQuery: TSQLQuery;
     procedure CrearComponentes;
-    procedure RefrescarGrid;
+    procedure ConfigurarDBComponents;
+    procedure LimpiarCampos;
+    procedure DBGridCellClick(Column: TColumn);
     procedure btnCrearClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnEliminarClick(Sender: TObject);
+    procedure btnLimpiarClick(Sender: TObject);
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -40,20 +45,26 @@ constructor TForm1.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
 
+  // Iniciar conexión a la base de datos
+  IniciarDB('localhost', 'SimpleCRUD', 'usuario', 'contraseña');
+
   // Crear componentes visuales
   CrearComponentes;
 
-  // Conectar a la base de datos
-  IniciarDB('localhost', 'SimpleCRUD', '', '');
+  // Configurar conexión a la base de datos y SQLQuery
+  ConfigurarDBComponents;
 
-  // Cargar datos en el TStringGrid
-  RefrescarGrid;
+  // Abrir consulta
+  SQLQuery.Open;
+
+  // Limpiar selección inicial
+  DBGrid.SelectedIndex := -1;
+  LimpiarCampos;
 end;
 
 destructor TForm1.Destroy;
 begin
-  // Finalizar la conexión a la base de datos
-  CerrarDB;
+  SQLQuery.Close;
   inherited Destroy;
 end;
 
@@ -130,57 +141,103 @@ begin
   btnEliminar.Top := 150;
   btnEliminar.OnClick := @btnEliminarClick;
 
-  // StringGrid para mostrar los datos
-  StringGrid := TStringGrid.Create(Self);
-  StringGrid.Parent := Self;
-  StringGrid.Left := 20;
-  StringGrid.Top := 200;
-  StringGrid.Width := 500;
-  StringGrid.Height := 200;
+  btnLimpiar := TButton.Create(Self);
+  btnLimpiar.Parent := Self;
+  btnLimpiar.Caption := 'Limpiar Campos';
+  btnLimpiar.Left := 320;
+  btnLimpiar.Top := 150;
+  btnLimpiar.Width := 150; // Aquí defines el ancho deseado
+  btnLimpiar.OnClick := @btnLimpiarClick;
 
-  // Configuración del StringGrid
-  StringGrid.ColCount := 5;
-  StringGrid.RowCount := 1; // Encabezado
-  StringGrid.FixedRows := 1;
 
-  StringGrid.Cells[0, 0] := 'Número Afiliado';
-  StringGrid.Cells[1, 0] := 'Nombre';
-  StringGrid.Cells[2, 0] := 'Apellido';
-  StringGrid.Cells[3, 0] := 'DNI';
-  StringGrid.Cells[4, 0] := 'Dirección';
+  // DBGrid para mostrar los datos
+  DBGrid := TDBGrid.Create(Self);
+  DBGrid.Parent := Self;
+  DBGrid.Left := 20;
+  DBGrid.Top := 200;
+  DBGrid.Width := 500;
+  DBGrid.Height := 200;
+  DBGrid.OnCellClick := @DBGridCellClick;
 end;
 
-procedure TForm1.RefrescarGrid;
-var
-  SQLQuery: TSQLQuery;
-  RowIndex: Integer;
+procedure TForm1.ConfigurarDBComponents;
 begin
-  StringGrid.RowCount := 1; // Limpiar el TStringGrid dejando solo el encabezado
+  // Configurar SQLQuery
+  SQLQuery := TSQLQuery.Create(Self);
+  SQLQuery.DataBase := Conn; // Usar conexión global de Unit2
+  SQLQuery.Transaction := Transaccion; // Usar transacción global de Unit2
+  SQLQuery.SQL.Text := 'SELECT ID, Nombre, Apellido, DNI, Direccion FROM Afiliados';
 
-  SQLQuery := TSQLQuery.Create(nil);
-  try
-    SQLQuery.DataBase := Conn; // Usar conexión global de DBUnit
-    SQLQuery.SQL.Text := 'SELECT ID, Nombre, Apellido, DNI, Direccion FROM Afiliados';
-    SQLQuery.Open;
+  // Configurar DataSource
+  DataSource := TDataSource.Create(Self);
+  DataSource.DataSet := SQLQuery;
 
-    RowIndex := 1;
-    while not SQLQuery.EOF do
-    begin
-      StringGrid.RowCount := StringGrid.RowCount + 1; // Agregar una nueva fila
+  // Enlazar DBGrid al DataSource
+  DBGrid.DataSource := DataSource;
 
-      // Asignar valores a cada celda en la fila
-      StringGrid.Cells[0, RowIndex] := SQLQuery.FieldByName('ID').AsString;
-      StringGrid.Cells[1, RowIndex] := SQLQuery.FieldByName('Nombre').AsString;
-      StringGrid.Cells[2, RowIndex] := SQLQuery.FieldByName('Apellido').AsString;
-      StringGrid.Cells[3, RowIndex] := SQLQuery.FieldByName('DNI').AsString;
-      StringGrid.Cells[4, RowIndex] := SQLQuery.FieldByName('Direccion').AsString;
+  // Configurar columnas del DBGrid
+  DBGrid.Columns.Clear;
 
-      Inc(RowIndex);
-      SQLQuery.Next;
-    end;
-  finally
-    SQLQuery.Free;
+  with DBGrid.Columns.Add do
+  begin
+    FieldName := 'ID';
+    Title.Caption := 'Número Afiliado';
+    Width := 100;
   end;
+
+  with DBGrid.Columns.Add do
+  begin
+    FieldName := 'Nombre';
+    Title.Caption := 'Nombre';
+    Width := 150;
+  end;
+
+  with DBGrid.Columns.Add do
+  begin
+    FieldName := 'Apellido';
+    Title.Caption := 'Apellido';
+    Width := 150;
+  end;
+
+  with DBGrid.Columns.Add do
+  begin
+    FieldName := 'DNI';
+    Title.Caption := 'DNI';
+    Width := 100;
+  end;
+
+  with DBGrid.Columns.Add do
+  begin
+    FieldName := 'Direccion';
+    Title.Caption := 'Dirección';
+    Width := 200;
+  end;
+end;
+
+procedure TForm1.LimpiarCampos;
+begin
+  edtNombre.Clear;
+  edtApellido.Clear;
+  edtDNI.Clear;
+  edtDireccion.Clear;
+end;
+
+
+
+procedure TForm1.DBGridCellClick(Column: TColumn);
+begin
+  if not SQLQuery.IsEmpty then
+  begin
+    edtNombre.Text := SQLQuery.FieldByName('Nombre').AsString;
+    edtApellido.Text := SQLQuery.FieldByName('Apellido').AsString;
+    edtDNI.Text := SQLQuery.FieldByName('DNI').AsString;
+    edtDireccion.Text := SQLQuery.FieldByName('Direccion').AsString;
+  end;
+end;
+
+procedure TForm1.btnLimpiarClick(Sender: TObject);
+begin
+ LimpiarCampos;
 end;
 
 procedure TForm1.btnCrearClick(Sender: TObject);
@@ -192,46 +249,55 @@ begin
   end;
 
   InsertarAfiliado(edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
-  RefrescarGrid;
+
+  // Refrescar los datos
+  SQLQuery.Close;
+  SQLQuery.Open;
 
   // Limpiar los campos
-  edtNombre.Clear;
-  edtApellido.Clear;
-  edtDNI.Clear;
-  edtDireccion.Clear;
+  LimpiarCampos;
+
   ShowMessage('Afiliado creado.');
 end;
 
 procedure TForm1.btnEditarClick(Sender: TObject);
-var
-  Id: Integer;
 begin
-  if StringGrid.Row < 1 then
+  if SQLQuery.IsEmpty then
   begin
     ShowMessage('Selecciona un registro para editar.');
     Exit;
   end;
 
-  Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
-  ActualizarAfiliado(Id, edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
-  RefrescarGrid;
+  ActualizarAfiliado(SQLQuery.FieldByName('ID').AsInteger, edtNombre.Text, edtApellido.Text, edtDNI.Text, edtDireccion.Text);
+
+  // Refrescar los datos
+  SQLQuery.Close;
+  SQLQuery.Open;
+
+  // Limpiar los campos
+  LimpiarCampos;
+
   ShowMessage('Afiliado actualizado.');
 end;
 
 procedure TForm1.btnEliminarClick(Sender: TObject);
-var
-  Id: Integer;
 begin
-  if StringGrid.Row < 1 then
+  if SQLQuery.IsEmpty then
   begin
     ShowMessage('Selecciona un registro para eliminar.');
     Exit;
   end;
 
-  Id := StrToInt(StringGrid.Cells[0, StringGrid.Row]);
-  EliminarAfiliado(Id);
-  RefrescarGrid;
-  ShowMessage('Afiliado' + edtNombre.Text + 'eliminado.');
+  EliminarAfiliado(SQLQuery.FieldByName('ID').AsInteger);
+
+  // Refrescar los datos
+  SQLQuery.Close;
+  SQLQuery.Open;
+
+  // Limpiar los campos
+  LimpiarCampos;
+
+  ShowMessage('Afiliado eliminado.');
 end;
 
 end.
